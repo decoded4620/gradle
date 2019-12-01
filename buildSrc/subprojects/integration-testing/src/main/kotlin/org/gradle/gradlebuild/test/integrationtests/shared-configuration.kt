@@ -83,7 +83,7 @@ fun Project.createTasks(sourceSet: SourceSet, testType: TestType) {
 internal
 fun Project.createTestTask(name: String, executer: String, sourceSet: SourceSet, testType: TestType, extraConfig: Action<IntegrationTest>): TaskProvider<IntegrationTest> =
     tasks.register(name, IntegrationTest::class) {
-        configureTestSplitIfNecessary(name, sourceSet, testType)
+        configureTestBucketIfNecessary(name, sourceSet, testType)
         description = "Runs ${testType.prefix} with $executer executer"
         systemProperties["org.gradle.integtest.executer"] = executer
         addDebugProperties()
@@ -95,32 +95,14 @@ fun Project.createTestTask(name: String, executer: String, sourceSet: SourceSet,
 
 
 private
-fun DistributionTest.configureTestSplitIfNecessary(name: String, sourceSet: SourceSet, testType: TestType) {
-    val testSplit = project.stringPropertyOrEmpty("testSplit")
-    if (testSplit.isBlank() || (testType == TestType.CROSSVERSION && name != "crossVersionTest")) {
-        // Cross version tests are splitted by tasks
-        // But if it's crossVersionTest in quickTest, we still split it
-        return
+fun DistributionTest.configureTestBucketIfNecessary(name: String, sourceSet: SourceSet, testType: TestType) {
+    val includeTestClasses = project.stringPropertyOrEmpty("includeTestClasses")
+    val excludeTestClasses = project.stringPropertyOrEmpty("excludeTestClasses")
+    if (!includeTestClasses.isBlank()) {
+        filter.includePatterns.addAll(includeTestClasses.split(","))
+    } else if (!excludeTestClasses.isBlank()) {
+        filter.excludePatterns.addAll(excludeTestClasses.split(","))
     }
-
-    val currentSplit = testSplit.split("/")[0].toInt()
-    val numberOfSplits = testSplit.split("/")[1].toInt()
-    val sourceFiles = sourceSet.groovy.files.sortedBy { it.absolutePath }
-
-    if (sourceFiles.size < numberOfSplits || name == "integMultiVersionTest") {
-        // https://github.com/gradle/gradle-private/issues/2740
-        enabled = currentSplit == 1
-        return
-    }
-
-    val buckets = splitIntoBuckets(sourceFiles, numberOfSplits)
-    if (currentSplit == numberOfSplits) {
-        filter.excludePatterns.addAll(buckets.subList(0, buckets.size - 1).flatten().map { it.nameWithoutExtension })
-    } else {
-        filter.includePatterns.addAll(buckets[currentSplit - 1].map { it.nameWithoutExtension })
-    }
-
-    inputs.property("testSplit", testSplit)
 }
 
 
