@@ -15,7 +15,6 @@
  */
 package org.gradle.gradlebuild.test.integrationtests
 
-import com.google.common.collect.MultimapBuilder
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -82,7 +81,8 @@ class CrossVersionTestsPlugin : Plugin<Project> {
             true
         } else {
             val targetVersion = GradleVersion.version(targetVersionString)
-            val testGradleVersion = GradleVersion.version("${testGradleMajorVersion}.0.0")
+            // if testGradleVersion=1, we test Gradle 0.x and Gradle 1.x
+            val testGradleVersion = GradleVersion.version("${if (testGradleMajorVersion == "1") "0" else testGradleMajorVersion}.0.0")
             testGradleVersion <= targetVersion && targetVersion <= testGradleVersion.nextMajor
         }
     }

@@ -12,6 +12,8 @@ import model.TestCoverage
 import model.TestType
 import java.io.File
 
+const val BUCKET_NUMBER = 40
+
 typealias BuildProjectToSubProjectTestClassTimes = Map<String, Map<String, List<TestClassTime>>>
 
 interface GradleBuildBucketProvider {
@@ -90,7 +92,7 @@ class StatisticBasedGradleBuildBucketProvider(private val model: CIBuildModel, t
             .filter { "UNKNOWN" != it.key }
             .filter { subProjectProvider.getSubProjectByName(it.key) != null }
             .map { SubProjectTestClassTime(subProjectProvider.getSubProjectByName(it.key)!!, it.value) }
-        val expectedBucketSize: Int = subProjectTestClassTimes.sumBy { it.totalTime } / testCoverage.expectedBucketNumber
+        val expectedBucketSize: Int = subProjectTestClassTimes.sumBy { it.totalTime } / BUCKET_NUMBER
 
         return split(subProjectTestClassTimes, expectedBucketSize)
     }

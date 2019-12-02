@@ -99,6 +99,10 @@ fun DistributionTest.configureTestBucketIfNecessary(name: String, sourceSet: Sou
     val includeTestClasses = project.stringPropertyOrEmpty("includeTestClasses")
     val excludeTestClasses = project.stringPropertyOrEmpty("excludeTestClasses")
     if (!includeTestClasses.isBlank()) {
+        if (name == "integMultiVersionTest") {
+            // Run integMultiVersionTest in last split
+            enabled = false
+        }
         filter.includePatterns.addAll(includeTestClasses.split(","))
     } else if (!excludeTestClasses.isBlank()) {
         filter.excludePatterns.addAll(excludeTestClasses.split(","))

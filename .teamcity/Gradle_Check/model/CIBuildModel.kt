@@ -63,8 +63,8 @@ data class CIBuildModel(
         Stage(StageNames.READY_FOR_NIGHTLY,
             trigger = Trigger.eachCommit,
             functionalTests = listOf(
-                TestCoverage(5, TestType.quickFeedbackCrossVersion, Os.linux, JvmCategory.MIN_VERSION.version, vendor = JvmCategory.MIN_VERSION.vendor, expectedBucketNumber = 20),
-                TestCoverage(6, TestType.quickFeedbackCrossVersion, Os.windows, JvmCategory.MIN_VERSION.version, vendor = JvmCategory.MIN_VERSION.vendor, expectedBucketNumber = 20),
+                TestCoverage(5, TestType.quickFeedbackCrossVersion, Os.linux, JvmCategory.MIN_VERSION.version, vendor = JvmCategory.MIN_VERSION.vendor),
+                TestCoverage(6, TestType.quickFeedbackCrossVersion, Os.windows, JvmCategory.MIN_VERSION.version, vendor = JvmCategory.MIN_VERSION.vendor),
                 TestCoverage(7, TestType.parallel, Os.linux, JvmCategory.MAX_VERSION.version, vendor = JvmCategory.MAX_VERSION.vendor))
         ),
         Stage(StageNames.READY_FOR_RELEASE,
@@ -242,7 +242,7 @@ data class Stage(val stageName: StageName, val specificBuilds: List<SpecificBuil
     val id = stageName.id
 }
 
-data class TestCoverage(val uuid: Int, val testType: TestType, val os: Os, val testJvmVersion: JvmVersion, val vendor: JvmVendor = JvmVendor.oracle, val buildJvmVersion: JvmVersion = JvmVersion.java11, val expectedBucketNumber: Int = 40) {
+data class TestCoverage(val uuid: Int, val testType: TestType, val os: Os, val testJvmVersion: JvmVersion, val vendor: JvmVendor = JvmVendor.oracle, val buildJvmVersion: JvmVersion = JvmVersion.java11) {
     fun asId(model: CIBuildModel): String {
         return "${model.projectPrefix}$testCoveragePrefix"
     }
