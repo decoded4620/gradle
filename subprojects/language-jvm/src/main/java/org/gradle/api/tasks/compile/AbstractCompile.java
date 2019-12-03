@@ -20,10 +20,10 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.provider.AbstractReadOnlyProvider;
+import org.gradle.api.model.ReplacedBy;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.SourceTask;
 import org.gradle.util.DeprecationLogger;
@@ -83,14 +83,10 @@ public abstract class AbstractCompile extends SourceTask {
      * @deprecated use {@link #getDestinationDirectory()}
      */
     @Deprecated
-    @Internal
+    @ReplacedBy("destinationDirectory")
     public File getDestinationDir() {
         // DeprecationLogger.nagUserOfReplacedMethod("getDestinationDir", "getDestinationDirectory");
-        if (destinationDir.isPresent()) {
-            return destinationDir.get().getAsFile();
-        } else {
-            return null;
-        }
+        return destinationDir.getAsFile().getOrNull();
     }
 
     /**
@@ -173,6 +169,11 @@ public abstract class AbstractCompile extends SourceTask {
         @Nullable
         @Override
         public Directory getOrNull() {
+            if (recursiveCall) {
+                // getOrNull() was called by AbstractCompile.getDestinationDirectory() and not by a subclass implementation of that method.
+                // In that case, this convention should not be used.
+                return null;
+            }
             recursiveCall = true;
             // If we are not in an error case, this will most likely call a subclass implementation of getDestinationDir().
             // In the Kotlin plugin, the subclass manages it's own field which will be used here.
@@ -183,16 +184,6 @@ public abstract class AbstractCompile extends SourceTask {
             } else {
                 return getProject().getLayout().dir(getProject().provider(() -> legacyValue)).get();
             }
-        }
-
-        @Override
-        public boolean isPresent() {
-            if (recursiveCall) {
-                // getOrNull() was called by AbstractCompile.getDestinationDir() and not by a subclass implementation of that method.
-                // In that case, this convention should not be used.
-                return false;
-            }
-            return super.isPresent();
         }
     }
 }
